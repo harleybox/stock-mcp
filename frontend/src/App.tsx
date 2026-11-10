@@ -100,6 +100,15 @@ export default function App() {
     return () => window.clearTimeout(timer.current);
   }, [universe, load]);
 
+  // Deep link: /?chart=NVDA opens that ticker's chart once the table has loaded.
+  const deepLink = useRef(new URLSearchParams(location.search).get("chart")?.toUpperCase());
+  useEffect(() => {
+    if (!deepLink.current || !rows.length) return;
+    const hit = rows.find((r) => r.ticker.toUpperCase() === deepLink.current);
+    deepLink.current = undefined;
+    if (hit) setOpen(hit);
+  }, [rows]);
+
   const refresh = async () => {
     try {
       const r = await refreshScreen(universe);
