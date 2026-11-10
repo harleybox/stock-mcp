@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Design tokens — the single source of truth for the UI. Components use them
+   as Tailwind utilities (bg-surface, text-muted, ...); the chart reads the
+   same CSS variables at runtime so candle colors stay on one palette. */
+@theme {
+  --color-bg: #0b0e14;
+  --color-surface: #151a23;
+  --color-surface-2: #1c2330;
+  --color-border: #283041;
+  --color-fg: #e6e9ef;
+  --color-muted: #8b94a7;
+  --color-primary: #4f8cff;
+  --color-up: #22c55e;
+  --color-down: #ef4444;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}

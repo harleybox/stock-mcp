@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+backend/data/
+.env
+.env.*
+.DS_Store
+.claude/
+*.tsbuildinfo
