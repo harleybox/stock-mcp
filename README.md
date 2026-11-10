@@ -1,34 +1,66 @@
-<div align="center">
-
 # stock-mcp
 
-### 给你的 AI 装一个选股工具
+[English](README.en.md) · 中文 · [![X @harleybox](https://img.shields.io/badge/X-@harleybox-000000.svg?logo=x)](https://x.com/harleybox) [![MIT](https://img.shields.io/badge/License-MIT-3ecf6b.svg)](LICENSE)
 
-让 Claude、Cursor 直接给整个指数打分排名、看 K 线,<br>
-还能现场跑回测,验一验「网上那套交易方法」到底有没有用。
+**让 Claude、Cursor 帮你选股、看 K 线、跑回测的 MCP server。**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-3ecf6b.svg)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/Python-3.10+-4f9cf9.svg)
-![MCP](https://img.shields.io/badge/MCP-server-8b5cf6.svg)
-[![X @harleybox](https://img.shields.io/badge/X-@harleybox-000000.svg?logo=x)](https://x.com/harleybox)
+装上之后,你用一句话就能让 AI 把纳指100 的一百只票按估值、成长、质量排好名,查任意一只股票或币的走势,还能当场跑回测,看看网上流传的买入方法到底管不管用。
 
-[English](README.en.md) · 中文
+不用注册,不用 API key,数据免费,全部跑在你自己电脑上。
 
 <img src="docs/demo.png" alt="在 AI 里提问:选股与回测验证" width="100%">
 
-<sub>示意图 —— 表里的数字是 2026-11-09 真实调用返回的结果</sub>
+<sub>示意图,表里的数字是 2026-11-09 真实跑出来的。</sub>
 
-</div>
+## 它能做什么
 
-## 为什么做这个
+### 1. 一句话筛完整个指数
 
-- **不用注册,不用 API key,不用数据库。** 数据来自 Yahoo Finance,缓存在本地一个 SQLite 文件里。
-- **AI 拿到的是算好的数,不是让它自己编。** 四个维度的池内排名、资金流入、价值陷阱标记,都是代码算出来再交给 AI 解读。
-- **自带「打假」工具。** 每份回测都带安慰剂对照:同样的规则套在随机挑的日子上。真信号比不过随机日,就是没用。
+> 纳指100 里又便宜、又在增长的科技股,给我前 10 个,高负债的不要
 
-## 三步装好
+AI 会拿到指数里每只票的四项打分(价值、成长、质量、PEG)和综合分,再按你的要求排序、过滤。支持纳斯达克100、标普500、沪深300、上证50。
 
-需要 Python 3.10+。
+可以按任意指标排序,按行业筛,只看资金在流入的,或者把「看着便宜其实有坑」的价值陷阱剔掉。
+
+### 2. 问清楚一只股票
+
+> NVDA 现在算贵吗?在纳指100 里排第几?
+
+返回这只票的全部数据:PE、预期 PE、ROE、营收和盈利增速、RSI、离 50 日线和 52 周高点多远、分析师目标价空间,以及它在指数里的综合名次和四项打分。
+
+### 3. 查任意代码的走势
+
+> BTC 这两个月走得怎么样,现在在 60 日线上面还是下面?
+
+美股、ETF、A股、币,Yahoo 上有的代码都能查。日线、周线都行,附带区间涨跌幅、最高最低、MA20 / 60 / 120。
+
+### 4. 当场验证一个交易方法
+
+> 三倍量阳线买入法靠谱吗?跑一下回测给我看
+
+AI 会真的跑一遍十年数据,然后告诉你结果。每份回测都带对照组:同样的买卖规则,套在随机挑的日子上再跑 30 遍。按信号买如果不比随机买强,这个方法就没用。
+
+目前内置三份,结果是这样的:
+
+| 方法 | 流传的说法 | 跑出来的结果 |
+|---|---|---|
+| Larry Williams 外包线 | BTC 胜率 94% | 1190 次信号,5 组参数,没有一组比随机挑日子强 |
+| 三倍量阳线,回踩买入 | 放量大阳线后缩量回踩就是买点 | 16 组参数全部和随机一样 |
+| EMA 五线多头排列 | 五条均线排好就拿着 | 年化 9.0%,一直拿着不动是 14.9% |
+
+完整数字和脚本在 [research/](research/README.md)。更多验过的方法发在 X:**[@harleybox](https://x.com/harleybox)**
+
+### 5. 不用 AI 也能用:自带网页版
+
+同一份数据,一个可排序、可筛选的选股表,点任意一行出 K 线。
+
+<img src="docs/screener.png" alt="选股表" width="100%">
+
+<img src="docs/chart.png" alt="K 线图" width="100%">
+
+## 安装
+
+需要 Python 3.10 以上。
 
 ```bash
 git clone https://github.com/harleybox/stock-mcp.git && cd stock-mcp
@@ -38,14 +70,16 @@ git clone https://github.com/harleybox/stock-mcp.git && cd stock-mcp
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt
 ```
 
+接到 Claude Code:
+
 ```bash
 claude mcp add stock -- "$PWD/.venv/bin/python" "$PWD/backend/mcp_server.py"
 ```
 
 <details>
-<summary>Claude Desktop / Cursor 等其它客户端</summary>
+<summary>接到 Claude Desktop、Cursor 或别的客户端</summary>
 
-在 MCP 配置里加一段,路径换成你的绝对路径:
+在 MCP 配置里加这一段,路径换成你电脑上的绝对路径:
 
 ```json
 {
@@ -60,99 +94,61 @@ claude mcp add stock -- "$PWD/.venv/bin/python" "$PWD/backend/mcp_server.py"
 
 </details>
 
-## 然后直接问
+装好就可以直接问了。第一次查某个指数要现拉数据,纳指100 大概等一两分钟,之后秒回。
 
-> 纳指100 里综合分最高的 10 只科技股,排除价值陷阱
-
-> NVDA 在池子里排第几?估值和成长各多少分?
-
-> BTC 最近 60 天走势怎么样,在 60 日均线上面还是下面?
-
-> 三倍量阳线买入法有用吗?跑一下回测
-
-第一次筛某个股票池要现拉数据(纳指100 约 1~2 分钟),AI 会收到进度并自动重试,之后走本地缓存。
-
-## 网上的交易方法,验了三个
-
-| 方法 | 流传的说法 | 实测 |
-|---|---|---|
-| Larry Williams 外包线 | BTC 胜率 94% | 1190 个信号,5 个参数格全部和随机日没区别 |
-| 三倍量阳线 + 回踩 | 放量阳线后缩量回踩就买 | 16 个参数格全部和随机日没区别;「三倍量」十年只出现 6 次 |
-| EMA 五线多头排列 | 均线全多头排列就持有 | 年化 9.0%,买入持有是 14.9% |
-
-三个都没测出比「随便哪天买」更多的东西。口径、完整数字和复现命令在 [research/](research/README.md),也可以让 AI 用 `run_study` 现场跑。
-
-**更多回测结论和看盘笔记发在 X → [@harleybox](https://x.com/harleybox)**
-
-## 也有网页版
-
-还需要 Node 20+。
+想用网页版,再装一个 Node 20 以上,然后运行下面这条,打开 <http://localhost:5173>:
 
 ```bash
 ./run.sh
 ```
 
-打开 <http://localhost:5173>。网页和 MCP 共用同一份本地缓存。
-
-<img src="docs/screener.png" alt="选股表" width="100%">
-
-点任意一行看 K 线(日线 / 周线,MA20 / 60 / 120,成交量);`/?chart=NVDA` 可以直接打开某只的图。
-
-<img src="docs/chart.png" alt="K 线图" width="100%">
-
-## 工具列表
-
-| 工具 | 作用 |
-|---|---|
-| `list_universes` | 有哪些股票池、哪些已有本地缓存 |
-| `screen_stocks` | 给股票池打分排名;可按任意列排序,按行业、资金流入、排除价值陷阱过滤 |
-| `get_stock` | 单只股票的全部指标和池内排名 |
-| `get_price_history` | 任意 Yahoo 代码的日线 / 周线(美股、ETF、币、A股),附区间涨跌和 MA20/60/120 |
-| `list_studies` | 内置了哪些回测研究 |
-| `run_study` | 现场跑一份回测,返回带安慰剂对照的结果 |
-
-股票池:纳斯达克100、标普500、沪深300、上证50。
+## 细节
 
 <details>
-<summary><b>分数是怎么算的</b></summary>
+<summary><b>分数怎么算的</b></summary>
 
-四个维度都是**池内百分位排名**(0~100),不用写死的阈值:
+四项都是在指数内部排名,0 到 100,没有写死的门槛:
 
-| 维度 | 用到的指标 | 权重 |
+| 项目 | 看什么 | 权重 |
 |---|---|---|
 | 价值 | PE、预期PE、PB、EV/EBITDA | 30% |
 | 成长 | 营收增速、盈利增速 | 25% |
 | 质量 | ROE、净利率、毛利率 | 25% |
 | PEG | PE ÷ 盈利增速 | 20% |
 
-另外附带:
+另外还有:
 
-- 技术面快照:RSI、距 50 日线、距 52 周高点、量比
-- 资金流入标记:MFI > 50 且 OBV 向上
-- 价值陷阱标记:高负债,或盈利下滑且营收不增长
+- 资金流入:MFI 大于 50,同时 OBV 向上
+- 价值陷阱:负债高,或者盈利在掉而营收没涨
 
-核心逻辑在 [backend/screener/fundamentals.py](backend/screener/fundamentals.py),一个文件能读完。
+全部逻辑在 [backend/screener/fundamentals.py](backend/screener/fundamentals.py),一个文件。
 
 </details>
 
 <details>
-<summary><b>目录结构</b></summary>
+<summary><b>六个 MCP 工具</b></summary>
 
-```
-backend/    mcp_server.py(MCP)、app.py(网页接口)、screener/(打分逻辑)
-frontend/   React + lightweight-charts
-research/   回测脚本,可单独运行
-```
+| 工具 | 作用 |
+|---|---|
+| `list_universes` | 有哪些指数,哪些已经有本地数据 |
+| `screen_stocks` | 给一个指数打分排名,支持排序和过滤 |
+| `get_stock` | 一只股票的全部指标和它在指数里的名次 |
+| `get_price_history` | 日线或周线,附带区间涨跌和均线 |
+| `list_studies` | 内置了哪些回测 |
+| `run_study` | 现场跑一份回测 |
 
 </details>
 
-## 须知
+<details>
+<summary><b>使用前要知道的</b></summary>
 
-- 这是**选股辅助**,不构成投资建议。
-- 基本面是当前快照,不是历史时点数据,所以这套打分**不能拿去回测**(会有前视偏差)。
-- 成分股名单是手工维护的快照,可能和最新成分有出入。
-- Yahoo 的数据可能延迟、缺失或限流;拉取失败过几分钟再试。
+- 它不荐股、不预测涨跌、不能下单。分数表示一只票在指数里的相对位置,仅供研究,不构成投资建议。
+- 数据来自 Yahoo Finance,可能延迟、缺失或被限流。拉不下来就过几分钟再试。
+- 基本面是当天的数据,所以这套打分本身不能拿去回测。
+- 成分股名单是手工维护的,可能比真实指数慢一点。
 
-## License
+</details>
 
-[MIT](LICENSE) · 觉得有用就点个 ⭐,或者来 X 找我聊:[@harleybox](https://x.com/harleybox)
+---
+
+MIT 协议。觉得有用就点个 ⭐,更多回测和看盘笔记在 X:[@harleybox](https://x.com/harleybox)

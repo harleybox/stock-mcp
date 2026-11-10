@@ -1,35 +1,66 @@
-<div align="center">
-
 # stock-mcp
 
-### Give your AI a stock screener
+English · [中文](README.md) · [![X @harleybox](https://img.shields.io/badge/X-@harleybox-000000.svg?logo=x)](https://x.com/harleybox) [![MIT](https://img.shields.io/badge/License-MIT-3ecf6b.svg)](LICENSE)
 
-Let Claude or Cursor rank every stock in an index and read price charts,<br>
-then run a live backtest to check whether that trading recipe from the internet does anything.
+**An MCP server that lets Claude and Cursor screen stocks, read price charts and run backtests for you.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-3ecf6b.svg)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/Python-3.10+-4f9cf9.svg)
-![MCP](https://img.shields.io/badge/MCP-server-8b5cf6.svg)
-[![X @harleybox](https://img.shields.io/badge/X-@harleybox-000000.svg?logo=x)](https://x.com/harleybox)
+Once it is installed, one sentence gets the AI to rank all hundred Nasdaq-100 stocks by value, growth and quality, pull the price history of any stock or coin, or run a backtest on the spot to see whether a popular buying method does anything.
 
-English · [中文](README.md)
+No sign-up, no API key, free data, and everything runs on your own machine.
 
 <img src="docs/demo.png" alt="Asking an AI to screen stocks and verify a trading method" width="100%">
 
-<sub>Illustration (in Chinese). The numbers are real tool output from 2026-11-09.<br>
-Left: "top 5 Nasdaq-100 tech stocks by combined score, excluding value traps". Right: "does the 3x-volume candle method work?"</sub>
+<sub>Illustration, in Chinese. The numbers are real output from 2026-11-09. Left: "top 5 Nasdaq-100 tech stocks, no value traps". Right: "does the 3x-volume candle method work?"</sub>
 
-</div>
+## What it can do
 
-## Why
+### 1. Screen a whole index in one sentence
 
-- **No sign-up, no API key, no database server.** Data comes from Yahoo Finance and is cached in one local SQLite file.
-- **The AI gets computed numbers instead of making them up.** Percentile ranks on four pillars, a money-inflow flag and a value-trap flag are calculated in code, then handed to the AI to interpret.
-- **A built-in myth checker.** Every backtest has a placebo control: the same rules applied to randomly chosen days. A signal that cannot beat random days carries no information.
+> Find me the 10 Nasdaq-100 tech stocks that are cheap and still growing. Skip the heavily indebted ones.
 
-## Install in three steps
+The AI receives four scores for every stock in the index (value, growth, quality, PEG) plus a combined score, then sorts and filters them the way you asked. Nasdaq-100, S&P 500, CSI 300 and SSE 50 are covered.
 
-Requires Python 3.10+.
+You can sort by any metric, filter by sector, keep only stocks with money flowing in, or drop value traps that look cheap for a bad reason.
+
+### 2. Get the full picture on one stock
+
+> Is NVDA expensive right now? Where does it rank in the Nasdaq-100?
+
+You get every number for that stock: P/E, forward P/E, ROE, revenue and earnings growth, RSI, distance from the 50-day average and the 52-week high, upside to the analyst target, plus its overall rank in the index and its four scores.
+
+### 3. Look up the price history of any symbol
+
+> How has BTC done over the last two months? Is it above or below its 60-day average?
+
+US stocks, ETFs, A-shares and crypto all work, as long as Yahoo has the symbol. Daily or weekly bars, with the period return, high, low and MA20 / 60 / 120.
+
+### 4. Test a trading method on the spot
+
+> Does the 3x-volume candle method hold up? Run the backtest and show me.
+
+The AI runs ten years of data and reports back. Every backtest has a control group: the same entry and exit rules applied to randomly chosen days, 30 times over. If buying on the signal is no better than buying at random, the method is worthless.
+
+Three are built in so far:
+
+| Method | The claim | The result |
+|---|---|---|
+| Larry Williams outside day | 94% win rate on BTC | 1,190 signals, 5 parameter sets, none better than random days |
+| 3x-volume candle, buy the pullback | A high-volume candle followed by a quiet pullback is a buy | All 16 parameter sets matched random |
+| EMA five-line stack | Hold while five EMAs are lined up | 9.0% a year, against 14.9% for simply holding |
+
+Full numbers and scripts are in [research/](research/README.md) (Chinese). More tested methods on X: **[@harleybox](https://x.com/harleybox)**
+
+### 5. A web page for when you do not want the AI
+
+The same data as a sortable, filterable table. Click any row for its chart. The interface is in Chinese.
+
+<img src="docs/screener.png" alt="Screener table" width="100%">
+
+<img src="docs/chart.png" alt="Price chart" width="100%">
+
+## Install
+
+You need Python 3.10 or newer.
 
 ```bash
 git clone https://github.com/harleybox/stock-mcp.git && cd stock-mcp
@@ -39,14 +70,16 @@ git clone https://github.com/harleybox/stock-mcp.git && cd stock-mcp
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt
 ```
 
+Connect it to Claude Code:
+
 ```bash
 claude mcp add stock -- "$PWD/.venv/bin/python" "$PWD/backend/mcp_server.py"
 ```
 
 <details>
-<summary>Claude Desktop, Cursor and other clients</summary>
+<summary>Connect it to Claude Desktop, Cursor or another client</summary>
 
-Add this to the MCP config, using your absolute paths:
+Add this to the MCP config, with the absolute paths on your machine:
 
 ```json
 {
@@ -61,65 +94,22 @@ Add this to the MCP config, using your absolute paths:
 
 </details>
 
-## Then just ask
+Then start asking. The first query on an index downloads data, about a minute or two for the Nasdaq-100. After that, answers come back right away.
 
-> Top 10 tech stocks in the Nasdaq-100 by combined score, excluding value traps
-
-> Where does NVDA rank, and how does it score on value versus growth?
-
-> How has BTC done over the last 60 days? Is it above its 60-day average?
-
-> Does buying after a 3x-volume bullish candle work? Run the backtest.
-
-The first screen of a universe downloads data (about 1–2 minutes for the Nasdaq-100). The AI gets progress and retries; later calls hit the local cache.
-
-## Three popular trading methods, tested
-
-| Method | The claim | What the data says |
-|---|---|---|
-| Larry Williams outside day | 94% win rate on BTC | 1,190 signals; all 5 parameter cells indistinguishable from random days |
-| 3x-volume bullish candle + pullback | Buy the low-volume pullback after a high-volume candle | All 16 parameter cells indistinguishable from random days; a true 3x-volume candle appeared 6 times in 10 years |
-| EMA five-line bullish stack | Hold while all five EMAs are stacked | 9.0% a year, against 14.9% for buy and hold |
-
-None of the three showed more than "buy on any random day". Method, full numbers and commands are in [research/](research/README.md) (Chinese), or ask the AI to run one with `run_study`.
-
-**More backtest write-ups and market notes on X → [@harleybox](https://x.com/harleybox)**
-
-## There is a web UI too
-
-Also requires Node 20+. The UI is in Chinese.
+For the web page, install Node 20 or newer as well, run the command below and open <http://localhost:5173>:
 
 ```bash
 ./run.sh
 ```
 
-Open <http://localhost:5173>. The web UI and the MCP server share the same local cache.
-
-<img src="docs/screener.png" alt="Screener table" width="100%">
-
-Click any row for its chart (daily / weekly, MA20 / 60 / 120, volume). `/?chart=NVDA` opens a ticker's chart directly.
-
-<img src="docs/chart.png" alt="Price chart" width="100%">
-
-## Tools
-
-| Tool | What it does |
-|---|---|
-| `list_universes` | Available universes and which are already cached |
-| `screen_stocks` | Rank a universe; sort by any column, filter by sector, money inflow, value traps |
-| `get_stock` | Every metric for one ticker plus its rank in the universe |
-| `get_price_history` | Daily / weekly bars for any Yahoo symbol (stocks, ETFs, crypto, A-shares) with period return and MA20/60/120 |
-| `list_studies` | The built-in backtest studies |
-| `run_study` | Run one study live and return its placebo-controlled report |
-
-Universes: Nasdaq-100, S&P 500, CSI 300, SSE 50.
+## Details
 
 <details>
-<summary><b>How the scores work</b></summary>
+<summary><b>How the scores are calculated</b></summary>
 
-Each pillar is a **percentile rank within the universe** (0–100), not a hard-coded threshold:
+Each of the four is a rank inside the index, from 0 to 100. There are no fixed cut-offs.
 
-| Pillar | Inputs | Weight |
+| Score | Based on | Weight |
 |---|---|---|
 | Value | P/E, forward P/E, P/B, EV/EBITDA | 30% |
 | Growth | Revenue growth, earnings growth | 25% |
@@ -128,32 +118,37 @@ Each pillar is a **percentile rank within the universe** (0–100), not a hard-c
 
 Also included:
 
-- Technical snapshot: RSI, distance from the 50-day average and the 52-week high, relative volume
-- Money-inflow flag: MFI > 50 and rising OBV
-- Value-trap flag: high debt, or falling earnings with flat revenue
+- Money inflow: MFI above 50 with OBV rising
+- Value trap: high debt, or earnings falling while revenue is flat
 
-The core logic is in [backend/screener/fundamentals.py](backend/screener/fundamentals.py), one readable file.
+All of it lives in [backend/screener/fundamentals.py](backend/screener/fundamentals.py), a single file.
 
 </details>
 
 <details>
-<summary><b>Layout</b></summary>
+<summary><b>The six MCP tools</b></summary>
 
-```
-backend/    mcp_server.py (MCP), app.py (web API), screener/ (scoring)
-frontend/   React + lightweight-charts
-research/   standalone backtest scripts
-```
+| Tool | What it does |
+|---|---|
+| `list_universes` | Which indexes exist and which already have local data |
+| `screen_stocks` | Scores and ranks an index, with sorting and filters |
+| `get_stock` | Every metric for one stock and its rank in the index |
+| `get_price_history` | Daily or weekly bars with period return and moving averages |
+| `list_studies` | The built-in backtests |
+| `run_study` | Runs one backtest on the spot |
 
 </details>
 
-## Caveats
+<details>
+<summary><b>Before you rely on it</b></summary>
 
-- A selection aid, not investment advice.
-- Fundamentals are a current snapshot, not point-in-time history, so these scores **cannot be backtested** without look-ahead bias.
-- Constituent lists are hand-maintained snapshots and may lag the real index.
-- Yahoo data can be delayed, missing or rate-limited; retry after a few minutes if a fetch fails.
+- It does not pick stocks, predict prices or place orders. A score shows where a stock sits inside its index. For research only, not investment advice.
+- Data comes from Yahoo Finance and can be late, missing or rate-limited. If a download fails, try again in a few minutes.
+- Fundamentals are today's numbers, so the scores themselves cannot be backtested.
+- Index member lists are maintained by hand and may lag the real index.
 
-## License
+</details>
 
-[MIT](LICENSE) · If this is useful, a ⭐ helps, or come say hi on X: [@harleybox](https://x.com/harleybox)
+---
+
+MIT licensed. A ⭐ helps if you find it useful. More backtests and market notes on X: [@harleybox](https://x.com/harleybox)
